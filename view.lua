@@ -31,7 +31,7 @@ newButton = display.newRoundedRect(newX, newY, 60, 40, 2)
 newButton.fill = cores.branco
 newButton.valor = display.newText("New", newX, newY, native.systemFont, 18)
 newButton.valor:setFillColor(191/255, 136/255, 99/255)
-newButton:addEventListener("tap", newGame)
+newButton:addEventListener("touch", newGame)
 ------------------</New game>---------------
 
 -----------------<movimento das pecas>-------------
@@ -39,7 +39,6 @@ pecaSelecionada, posicaoSelecionada, peca, pecaVez = nil
 
 function moveEvent(event)
     i, j = event.target.i, event.target.j
-    -- print('['..i..']['..j..']')
     if (pecaVez == nil) then
         alternarJogadores()
     end
@@ -78,6 +77,7 @@ function newRect(group, x, y, width, height, i, j, color)
         rect = display.newRect(group, x, y, width, height)
         rect.i, rect.j = i, j
         rect.fill = color
+        rect.image = nil
     return rect
 end
 
@@ -111,25 +111,18 @@ end
 ------------</gera a imagem do tabuleiro>---------
 ------------<mostra as peças no tabuleiro>--------
 function mostrar()
+    tableView()
     matriz = tabuleiro.matriz
     posX, posY, k = 32, 40, 1
-    nome = nil                                                                          --temporário
     for i = 1, #matriz do
         for j = 1, #matriz do
             if (matriz[i][j] ~= nil) then
-                local image = display.newImage(path(matriz[i][j]), tableGroup[k].x + posX, tableGroup[k].y + posY)
+                local image = display.newImage(tableGroup, path(matriz[i][j]), tableGroup[k].x, tableGroup[k].y)
                 image:scale(0.6, 0.6)
-                nome = matriz[i][j].nome == 'brancas' and 'b' or 'n'                    --temporário
-                nome = matriz[i][j].tipo == 'normal' and nome or string.upper(nome)     --temporário
-                io.write('['..nome..']')                                                --temporário
-            else                                                                        --temporário
-                io.write('[ ]')                                                         --temporário
             end
             k = k + 1
         end
-        io.write('\n')                                                                  --temporário
     end
-    io.write('\n')                                                                      --temporário
 end
 
 function path(peca)
