@@ -11,11 +11,11 @@ background.fill = cores.cinza
 ------------------<New game>---------------
 ------<evento de novo jogo>-----
 function newGame( event )
-    if ( event.phase == "began" ) then                                   --efeito no botão ao pressionar
+    if ( event.phase == "began" ) then
         event.target.alpha = 0.5
         event.target.valor.alpha = 0.5
         display.getCurrentStage():setFocus( event.target )
-    elseif ( event.phase == "ended" or event.phase == "cancelled" ) then --efeito no botão ao pressionar
+    elseif ( event.phase == "ended" or event.phase == "cancelled" ) then
         event.target.alpha = 1
         event.target.valor.alpha = 1
         display.getCurrentStage():setFocus( nil )
@@ -32,9 +32,54 @@ newButton.fill = cores.branco
 newButton.valor = display.newText("New", newX, newY, native.systemFont, 18)
 newButton.valor:setFillColor(191/255, 136/255, 99/255)
 newButton:addEventListener("touch", newGame)
-------------------</New game>---------------
+------------------</New game>----------------------
+------------------<placar>--------------
+placarX, placarY = 160, 70
+placar = display.newRoundedRect(placarX, placarY, 230, 70, 2)
+placar.fill = cores.branco
 
------------------<movimento das pecas>-------------
+pecas = {
+    {nome = 'negras', tipo = 'normal', created = false},
+    {nome = 'negras', tipo = 'dama', created = false},
+    {nome = 'brancas', tipo = 'normal', created = false},
+    {nome = 'brancas', tipo = 'dama', created = false}
+}
+
+function gerarPlacar()
+    x, y, z = 85, 60, 90
+    for i = 1, 4 do
+        if(pecas[i].created == false) then
+            pecas[i].image = display.newImage(path(pecas[i]), x, y)
+            pecas[i].image:scale(0.5, 0.5)
+            pecas[i].quantidade = display.newText(getQuantidade(pecas[i]), x, z, native.systemFont, 20)
+            pecas[i].quantidade:setFillColor(191/255, 136/255, 99/255)
+            pecas[i].created = true
+        else
+            pecas[i].quantidade:removeSelf()
+            pecas[i].quantidade = nil
+            pecas[i].quantidade = display.newText(getQuantidade(pecas[i]), x, z, native.systemFont, 20)
+            pecas[i].quantidade:setFillColor(191/255, 136/255, 99/255)
+        end
+        x = x + 50
+    end
+end
+
+function getQuantidade(peca)
+    matriz = tabuleiro.matriz
+    quantidade = 0
+    for i = 1, #matriz do
+        for j = 1, #matriz do
+            if(matriz[i][j] ~= nil) then
+                if (matriz[i][j].nome == peca.nome and matriz[i][j].tipo == peca.tipo) then
+                    quantidade = quantidade + 1
+                end
+            end
+        end
+    end
+    return quantidade..''
+end
+------------------<contagem de peças>--------------
+-----------------</placar>-------------
 pecaSelecionada, posicaoSelecionada, peca, pecaVez = nil
 
 function moveEvent(event)
@@ -74,7 +119,11 @@ tableGroup.x, tableGroup.y = 31, 40
 
 function newRect(group, x, y, width, height, i, j, color)
     local rect = nil
+    if (group == nil) then
+        rect = display.newRect(x, y, width, height)
+    else
         rect = display.newRect(group, x, y, width, height)
+    end
         rect.i, rect.j = i, j
         rect.fill = color
         rect.image = nil
@@ -112,6 +161,7 @@ end
 ------------<mostra as peças no tabuleiro>--------
 function mostrar()
     tableView()
+    gerarPlacar()
     matriz = tabuleiro.matriz
     posX, posY, k = 32, 40, 1
     for i = 1, #matriz do
@@ -129,3 +179,4 @@ function path(peca)
     return 'icon/peca_'..peca.nome..'_'..peca.tipo..'.png'
 end
 ------------</mostra as peças no tabuleiro>--------
+gerarPlacar()
