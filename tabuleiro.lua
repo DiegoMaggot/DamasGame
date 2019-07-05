@@ -48,14 +48,16 @@ end
 
 function tabuleiro:fazerJogada(peca, linha, coluna, novaLinha, novaColuna)
     jogadaEfetuada, capturaRealizada = false, false
-    if (tabuleiro:capturarPeca(peca, linha, coluna, novaLinha, novaColuna)) then
-        jogadaEfetuada, capturaRealizada = true, true
-    elseif (tabuleiro:moverPeca(peca, linha, coluna, novaLinha, novaColuna)) then
-        jogadaEfetuada = true
-    end
-    if (jogadaEfetuada and tabuleiro:promocaoValida(peca, novaLinha)) then
-        pecaClass:promover(peca)
-    end
+        if(peca.tipo == 'dama') then
+            jogadaEfetuada, capturaRealizada = tabuleiro:acaoDamas(peca, linha, coluna, novaLinha, novaColuna) 
+        elseif (tabuleiro:capturarPeca(peca, linha, coluna, novaLinha, novaColuna)) then
+            jogadaEfetuada, capturaRealizada = true, true
+        elseif (tabuleiro:moverPeca(peca, linha, coluna, novaLinha, novaColuna)) then
+            jogadaEfetuada = true
+        end
+        if (jogadaEfetuada and tabuleiro:promocaoValida(peca, novaLinha)) then
+            pecaClass:promover(peca)
+        end
     return jogadaEfetuada, capturaRealizada
 end
 
@@ -70,11 +72,90 @@ function tabuleiro:moverPeca(peca, linha, coluna, novaLinha, novaColuna)
     return false
 end
 
+function tabuleiro:executarCapturas(pecasInimigas)
+    if (#pecasInimigas > 0) then
+        for c, pos in ipairs(pecasInimigas) do
+            if(pos[1] >= 1 and pos[1] <= 8 and pos[2] >= 1 and pos[2] <= 8) then
+                self.matriz[pos[1]][pos[2]] = nil
+            end
+        end
+    end
+end
+
+function tabuleiro:acaoDamas(peca, linha, coluna, novaLinha, novaColuna) --movimento e captura das damas
+    pecasInimigas = {} --posicoes das pecas inimigas no caminho da dama
+    cont = 1
+    repeat
+        if(tabuleiro:posicaoLivre(novaLinha, novaColuna)) then
+            if (linha < novaLinha and coluna > novaColuna) then --diagonal inferior esquerda
+                if (linha + cont == novaLinha and coluna - cont == novaColuna and (linha + cont <= 8) and (coluna - cont >= 1)) then
+                    tabuleiro:executarCapturas(pecasInimigas)  --se ao chegar na posição de destino tiver tudo certo executa as capturas
+                    capturaRealizada = #pecasInimigas > 0 and true or false
+                    self.matriz[linha][coluna] = nil
+                    self.matriz[novaLinha][novaColuna] = peca
+                    return true, capturaRealizada
+                elseif (self.matriz[linha + cont][coluna - cont] ~= nil) then
+                    if(self.matriz[linha + cont][coluna - cont].nome ~= peca.nome and tabuleiro:posicaoLivre(linha + cont + 1, coluna - cont + 1)) then
+                        table.insert(pecasInimigas, {linha + cont, coluna - cont}) --salva a posição da peca inimiga se for uma captura válida
+                    else
+                        return false
+                    end
+                end
+            elseif (linha < novaLinha and coluna < novaColuna) then --diagonal inferior direita
+                if (linha + cont == novaLinha and coluna + cont == novaColuna and (linha + cont <= 8) and (coluna + cont <= 8)) then
+                    tabuleiro:executarCapturas(pecasInimigas) --se ao chegar na posição de destino tiver tudo certo executa as capturas
+                    capturaRealizada = #pecasInimigas > 0 and true or false
+                    self.matriz[linha][coluna] = nil
+                    self.matriz[novaLinha][novaColuna] = peca
+                    return true, capturaRealizada
+                elseif (self.matriz[linha + cont][coluna + cont] ~= nil) then
+                    if(self.matriz[linha + cont][coluna + cont].nome ~= peca.nome and tabuleiro:posicaoLivre(linha + cont + 1, coluna + cont + 1)) then
+                        table.insert(pecasInimigas, {linha + cont, coluna + cont}) --salva a posição da peca inimiga se for uma captura válida
+                    else
+                        return false
+                    end
+                end
+            elseif (linha > novaLinha and coluna > novaColuna) then --diagonal superior esquerda
+                if (linha - cont == novaLinha and coluna - cont == novaColuna and (linha - cont >= 1) and (coluna - cont >= 1)) then
+                    tabuleiro:executarCapturas(pecasInimigas) --se ao chegar na posição de destino tiver tudo certo executa as capturas
+                    capturaRealizada = #pecasInimigas > 0 and true or false
+                    self.matriz[linha][coluna] = nil
+                    self.matriz[novaLinha][novaColuna] = peca
+                    return true, capturaRealizada
+                elseif (self.matriz[linha - cont][coluna - cont] ~= nil) then
+                    if(self.matriz[linha - cont][coluna - cont].nome ~= peca.nome and tabuleiro:posicaoLivre(linha - cont + 1, coluna - cont + 1)) then
+                        table.insert(pecasInimigas, {linha - cont, coluna - cont}) --salva a posição da peca inimiga se for uma captura válida
+                    else
+                        return false
+                    end
+                end
+            elseif (linha > novaLinha and coluna < novaColuna) then --diagonal superior direita
+                if (linha - cont == novaLinha and coluna + cont == novaColuna and (linha - cont >= 1) and (coluna + cont <= 8)) then
+                    tabuleiro:executarCapturas(pecasInimigas) --se ao chegar na posição de destino tiver tudo certo executa as capturas
+                    capturaRealizada = #pecasInimigas > 0 and true or false
+                    self.matriz[linha][coluna] = nil
+                    self.matriz[novaLinha][novaColuna] = peca
+                    return true, capturaRealizada
+                elseif (self.matriz[linha - cont][coluna + cont] ~= nil) then
+                    if(self.matriz[linha - cont][coluna + cont].nome ~= peca.nome and tabuleiro:posicaoLivre(linha - cont + 1, coluna + cont + 1)) then
+                        table.insert(pecasInimigas, {linha - cont, coluna + cont}) --salva a posição da peca inimiga se for uma captura válida
+                    else
+                        return false
+                    end
+                end
+            end
+        else
+            return false
+        end
+        cont = cont + 1
+    until cont == 8
+end
+
 function tabuleiro:movimentoValido(peca, linha, coluna, novaLinha, novaColuna) --verifica se o movimento é válido para damas e peças normais.
     if (self.matriz[linha][coluna] ~= nil) then
+        pecasInimigas = {}
         cont = 1
-        repeat
-            if (peca.nome == 'negras' and peca.tipo == 'normal' and novaLinha > linha) then --impede que as negras joguem voltando
+            if (peca.nome == 'negras' and peca.tipo == 'normal' and novaLinha > linha) then     --impede que as negras joguem voltando
                 return false
             elseif (peca.nome == 'brancas' and peca.tipo == 'normal' and novaLinha < linha) then --impede que as brancas joguem voltando
                 return false
@@ -88,8 +169,6 @@ function tabuleiro:movimentoValido(peca, linha, coluna, novaLinha, novaColuna) -
             elseif (linha - cont == novaLinha and coluna + cont == novaColuna and (linha - cont >= 1) and (coluna + cont <= 8)) then
                 return true
             end
-            cont = peca.tipo == 'normal' and 8 or cont + 1
-        until cont == 8
     end
     return false
 end
